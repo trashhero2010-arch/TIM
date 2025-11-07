@@ -56,12 +56,12 @@
   <script>
     async function loadWords() {
       try {
-        const res = await fetch('words.txt');
+        const res = await fetch('love.txt');
         const text = await res.text();
         const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
         createHeart(lines);
       } catch (err) {
-        console.error('无法读取 words.txt:', err);
+        console.error('无法读取 love.txt:', err);
       }
     }
 
@@ -135,6 +135,7 @@
   </script>
 </body>
 </html>
+
 
 
 
