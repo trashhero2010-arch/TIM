@@ -3,250 +3,119 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>猜数字小游戏</title>
+  <title>爱心卡片动效（读取TXT）</title>
   <style>
-    :root{--bg:#0f172a;--card:#0b1220;--accent:#60a5fa;--muted:#94a3b8;}
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#071028 0%, #05243d 100%);font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#e6eef8}
-    .wrap{width:min(760px,96vw);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:20px;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
-    header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
-    h1{font-size:20px;margin:0}
-    .controls{display:flex;gap:8px;align-items:center}
-    select,input[type=number]{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:inherit}
-    button{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;color:#07203a;font-weight:600;cursor:pointer}
-    main{display:grid;grid-template-columns:1fr 260px;gap:16px}
-    .game{background:var(--card);padding:16px;border-radius:10px}
-    .sidebar{background:rgba(255,255,255,0.02);padding:14px;border-radius:10px}
-    .status{margin:8px 0;padding:12px;border-radius:8px;background:linear-gradient(90deg, rgba(9,22,39,0.6), rgba(6,14,28,0.6));border:1px solid rgba(255,255,255,0.03)}
-    .hint{font-size:18px;font-weight:700}
-    .small{color:var(--muted);font-size:13px}
-    .input-row{display:flex;gap:8px;margin-top:12px}
-    .attempts{display:flex;flex-direction:column;gap:8px}
-    .history{max-height:180px;overflow:auto;padding:8px;background:rgba(0,0,0,0.12);border-radius:8px}
-    .row{display:flex;justify-content:space-between;padding:6px 8px;border-radius:6px}
-    .row.even{background:rgba(255,255,255,0.01)}
-    footer{margin-top:12px;font-size:13px;color:var(--muted);text-align:center}
-    @media (max-width:760px){main{grid-template-columns:1fr;}
-      .sidebar{order:2}}
+    :root{ --card-w:120px; --card-h:56px; }
+    html,body{
+      height:100%;margin:0;
+      font-family:system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:linear-gradient(180deg,#fffaf6,#ffeef0);
+    }
+    .phone {
+      width:420px;
+      height:860px;
+      max-width:100%;
+      margin:24px auto;
+      background:linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,255,255,0.6));
+      border-radius:28px;
+      box-shadow:0 12px 40px rgba(0,0,0,0.12);
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(0,0,0,0.04);
+    }
+    header{padding:12px 16px;text-align:center;}
+    header h1{font-size:16px;margin:0;font-weight:600}
+    .stage{position:absolute;left:0;right:0;top:60px;bottom:0;display:block;}
+    .card{
+      position:absolute;
+      width:var(--card-w);
+      height:var(--card-h);
+      box-sizing:border-box;
+      padding:8px 10px;
+      border-radius:10px;
+      background:linear-gradient(180deg,#ffffff,#fff6f8);
+      box-shadow:0 6px 18px rgba(255,107,138,0.12), 0 2px 6px rgba(0,0,0,0.06);
+      display:flex;align-items:center;justify-content:center;
+      text-align:center;font-weight:600; font-size:13px; color:#333;
+      transform-origin:center center; opacity:0;
+      transition: all 0.8s ease;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="phone">
     <header>
-      <h1>猜数字小游戏</h1>
-      <div class="controls">
-        <label class="small">难度
-          <select id="difficulty">
-            <option value="easy">简单 (1-20)</option>
-            <option value="normal" selected>普通 (1-100)</option>
-            <option value="hard">困难 (1-1000)</option>
-          </select>
-        </label>
-        <button id="newGame">新游戏</button>
-      </div>
+      <h1>💖 爱心卡片动效 💖</h1>
     </header>
-
-    <main>
-      <section class="game">
-        <div class="status">
-          <div class="hint" id="hint">点击“新游戏”开始 — 我已经选好了一个数字。</div>
-          <div class="small" id="rangeInfo">范围：—</div>
-        </div>
-
-        <div class="input-row">
-          <input id="guessInput" type="number" placeholder="输入你的猜测" aria-label="输入猜测" />
-          <button id="guessBtn">猜</button>
-        </div>
-
-        <div class="attempts">
-          <div class="small">剩余尝试次数： <span id="triesLeft">—</span></div>
-          <div class="small">已用尝试次数： <span id="triesUsed">0</span></div>
-        </div>
-
-        <div style="margin-top:12px">
-          <div class="small">历史记录：</div>
-          <div class="history" id="historyList"></div>
-        </div>
-
-        <div style="margin-top:12px;display:flex;gap:8px">
-          <button id="hintBtn">提示（显示范围）</button>
-          <button id="giveUpBtn" style="background:transparent;color:var(--accent);border:1px solid rgba(255,255,255,0.04)">认输</button>
-        </div>
-      </section>
-
-      <aside class="sidebar">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <strong>得分 / 记录</strong>
-          <button id="resetHigh" style="background:transparent;border:1px solid rgba(255,255,255,0.04);padding:6px;border-radius:8px;color:var(--muted)">重置</button>
-        </div>
-        <div style="margin-top:10px">
-          <div class="small">当前分数：<span id="score">0</span></div>
-          <div class="small">最高分：<span id="highScore">0</span></div>
-          <div class="small" style="margin-top:8px">用时：<span id="elapsed">00:00</span></div>
-        </div>
-
-        <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)" />
-
-        <div class="small">玩法简述：</div>
-        <ul class="small">
-          <li>点击“新游戏”开始。系统会在当前难度内随机选数。</li>
-          <li>输入数字并按“猜”或回车。会显示“偏大/偏小/正确”。</li>
-          <li>较少尝试次数与更快完成会获得更高分数。</li>
-        </ul>
-
-      </aside>
-    </main>
-
-    <footer>按回车键可提交猜测 · 页面会记住最高分（保存在浏览器）</footer>
+    <div class="stage" id="stage">
+      <div class="positions" id="positions"></div>
+    </div>
   </div>
 
   <script>
-    (function(){
-      const difficultyEl = document.getElementById('difficulty');
-      const newGameBtn = document.getElementById('newGame');
-      const guessBtn = document.getElementById('guessBtn');
-      const guessInput = document.getElementById('guessInput');
-      const hintEl = document.getElementById('hint');
-      const rangeInfo = document.getElementById('rangeInfo');
-      const triesLeftEl = document.getElementById('triesLeft');
-      const triesUsedEl = document.getElementById('triesUsed');
-      const historyList = document.getElementById('historyList');
-      const hintBtn = document.getElementById('hintBtn');
-      const giveUpBtn = document.getElementById('giveUpBtn');
-      const scoreEl = document.getElementById('score');
-      const highScoreEl = document.getElementById('highScore');
-      const resetHighBtn = document.getElementById('resetHigh');
-      const elapsedEl = document.getElementById('elapsed');
-
-      let secret = null, min=1, max=100, maxTries=10, tries=0, startTime=null, timerInterval=null;
-
-      function setDifficulty(val){
-        if(val==='easy'){ min=1; max=20; maxTries=6 }
-        else if(val==='normal'){ min=1; max=100; maxTries=10 }
-        else { min=1; max=1000; maxTries=12 }
-        rangeInfo.textContent = `范围：${min} — ${max}`;
-        triesLeftEl.textContent = maxTries - tries;
+    async function loadWords() {
+      try {
+        const res = await fetch('words.txt');
+        const text = await res.text();
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        createHeart(lines);
+      } catch (err) {
+        console.error('无法读取 words.txt:', err);
       }
+    }
 
-      function startTimer(){
-        startTime = Date.now();
-        clearInterval(timerInterval);
-        timerInterval = setInterval(()=>{
-          const s = Math.floor((Date.now()-startTime)/1000);
-          const mm = String(Math.floor(s/60)).padStart(2,'0');
-          const ss = String(s%60).padStart(2,'0');
-          elapsedEl.textContent = `${mm}:${ss}`;
-        }, 500);
+    function heartPoints(count, w, h, padding=40){
+      const pts = [];
+      const samples = Math.max(count*4, 300);
+      const raw = [];
+      for(let i=0;i<samples;i++){
+        const t = (i/samples) * Math.PI * 2;
+        const x = 16 * Math.pow(Math.sin(t),3);
+        const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+        raw.push([x,y]);
       }
-
-      function stopTimer(){ clearInterval(timerInterval); }
-
-      function newGame(){
-        setDifficulty(difficultyEl.value);
-        secret = Math.floor(Math.random()*(max-min+1))+min;
-        tries = 0;
-        historyList.innerHTML='';
-        hintEl.textContent = '游戏开始！输入你的猜测。';
-        triesUsedEl.textContent = '0';
-        triesLeftEl.textContent = maxTries;
-        scoreEl.textContent = '0';
-        guessInput.disabled = false;
-        guessInput.value = '';
-        guessInput.focus();
-        startTimer();
-        // console.log('secret', secret);
+      let minx=Infinity,maxx=-Infinity,miny=Infinity,maxy=-Infinity;
+      raw.forEach(([x,y])=>{if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;});
+      for(let i=0;i<count;i++){
+        const idx = Math.floor(i * raw.length / count);
+        const [x,y] = raw[idx];
+        const nx = (x - minx) / (maxx - minx);
+        const ny = (y - miny) / (maxy - miny);
+        const px = padding + nx * (w - padding*2);
+        const py = padding + (1-ny) * (h - padding*2);
+        pts.push({x:px,y:py});
       }
+      return pts;
+    }
 
-      function endGame(won){
-        guessInput.disabled = true;
-        stopTimer();
-        const elapsedSec = Math.floor((Date.now()-startTime)/1000) || 0;
-        const baseScore = won ? Math.max(0, (maxTries - (tries-1))*100) : 0;
-        const timeBonus = won ? Math.max(0, Math.floor((Math.max(0, (max - min + 1)/10) - elapsedSec))) : 0;
-        const finalScore = baseScore + Math.max(0, 50 - Math.floor(elapsedSec/5)) + timeBonus;
-        scoreEl.textContent = finalScore;
-        saveHighScore(finalScore);
-      }
+    function createHeart(lines){
+      const stage = document.getElementById('stage');
+      const positionsLayer = document.getElementById('positions');
+      const w = stage.clientWidth;
+      const h = stage.clientHeight;
+      const pts = heartPoints(lines.length, w, h, 40);
 
-      function saveHighScore(s){
-        const key = 'guess_high_' + difficultyEl.value;
-        const prev = Number(localStorage.getItem(key) || 0);
-        if(s>prev){ localStorage.setItem(key, s); highScoreEl.textContent = s; }
-        else { highScoreEl.textContent = prev }
-      }
-
-      function loadHighScore(){
-        const key = 'guess_high_' + difficultyEl.value;
-        highScoreEl.textContent = localStorage.getItem(key) || '0';
-      }
-
-      function addHistory(text){
-        const idx = historyList.children.length;
-        const div = document.createElement('div');
-        div.className = 'row ' + (idx%2===0? 'even':'');
-        div.innerHTML = `<div>${text}</div><div class="small">${new Date().toLocaleTimeString()}</div>`;
-        historyList.prepend(div);
-      }
-
-      function makeHint(guess){
-        if(guess === secret) return '恭喜你，猜对了！';
-        if(guess < secret) return '太小了 → 再试大一点';
-        return '太大了 ← 再试小一点';
-      }
-
-      function handleGuess(){
-        const raw = guessInput.value.trim();
-        if(raw==='') return;
-        const g = Number(raw);
-        if(Number.isNaN(g)) return;
-        if(g<min || g>max){ hintEl.textContent = `请猜 ${min} 到 ${max} 的整数。`; return }
-        tries++;
-        triesUsedEl.textContent = String(tries);
-        triesLeftEl.textContent = String(Math.max(0, maxTries - tries));
-        const msg = makeHint(g);
-        hintEl.textContent = msg;
-        addHistory(`第 ${tries} 次：你猜 ${g} — ${msg}`);
-        if(g === secret){ endGame(true); }
-        else if(tries >= maxTries){ hintEl.textContent = `游戏结束，正确答案是 ${secret}`; endGame(false); }
-        guessInput.value = '';
-        guessInput.focus();
-      }
-
-      // events
-      newGameBtn.addEventListener('click', ()=>{ newGame(); loadHighScore(); });
-      guessBtn.addEventListener('click', handleGuess);
-      guessInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') handleGuess(); });
-      difficultyEl.addEventListener('change', ()=>{ setDifficulty(difficultyEl.value); loadHighScore(); });
-      hintBtn.addEventListener('click', ()=>{
-        if(secret===null){ hintEl.textContent='先点击新游戏开始'; return }
-        const span = Math.max(1, Math.floor((max-min+1)/6));
-        const low = Math.max(min, secret - span);
-        const high = Math.min(max, secret + span);
-        hintEl.textContent = `提示：答案在 ${low} — ${high} 之间。`;
+      lines.forEach((txt, i)=>{
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.textContent = txt;
+        positionsLayer.appendChild(el);
+        const target = pts[i];
+        el.style.left = target.x - 60 + 'px';
+        el.style.top = target.y - 28 + 'px';
+        setTimeout(()=>{
+          el.style.opacity = 1;
+          el.style.transform = 'scale(1) rotate(0deg)';
+        }, i*150);
       });
-      giveUpBtn.addEventListener('click', ()=>{
-        if(secret===null){ hintEl.textContent='先点击新游戏开始'; return }
-        hintEl.textContent = `已认输，答案是 ${secret}`;
-        addHistory(`认输 — 答案 ${secret}`);
-        endGame(false);
-      });
-      resetHighBtn.addEventListener('click', ()=>{
-        const key = 'guess_high_' + difficultyEl.value;
-        localStorage.removeItem(key);
-        loadHighScore();
-      });
+    }
 
-      // init
-      setDifficulty(difficultyEl.value);
-      loadHighScore();
-
-      // Accessibility: focus input on load
-      window.addEventListener('load', ()=>{ guessInput.focus(); });
-
-    })();
+    window.addEventListener('load', loadWords);
   </script>
 </body>
 </html>
+
+
 
 
 
