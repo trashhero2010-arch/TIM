@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>💖 爱心卡片动效（直屏版）</title>
+  <title>爱心卡片动效（从两边飞出）</title>
   <style>
     :root{ --card-w:80px; --card-h:38px; }
     html,body{
       height:100%;margin:0;
-      font-family:"Microsoft YaHei",sans-serif;
+      font-family:system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
       background:linear-gradient(180deg,#fffaf6,#ffeef0);
       overflow:hidden;
     }
@@ -48,7 +48,9 @@
     <header>
       <h1>💖 爱心卡片动效 💖</h1>
     </header>
-    <div class="stage" id="stage"></div>
+    <div class="stage" id="stage">
+      <div class="positions" id="positions"></div>
+    </div>
   </div>
 
   <script>
@@ -63,16 +65,14 @@
       }
     }
 
-    // ❤️ 生成爱心坐标（直屏用）
-    function heartPoints(count, w, h, padding=160){
+    function heartPoints(count, w, h, padding=40){
       const pts = [];
-      const samples = Math.max(count*4, 400);
+      const samples = Math.max(count*4, 300);
       const raw = [];
-      const scale = 0.65; // 控制爱心整体大小
       for(let i=0;i<samples;i++){
         const t = (i/samples) * Math.PI * 2;
-        const x = 16 * Math.pow(Math.sin(t),3) * scale;
-        const y = (13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t)) * scale;
+        const x = 16 * Math.pow(Math.sin(t),3);
+        const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
         raw.push([x,y]);
       }
       let minx=Infinity,maxx=-Infinity,miny=Infinity,maxy=-Infinity;
@@ -91,22 +91,26 @@
 
     function createHeart(lines){
       const stage = document.getElementById('stage');
+      const positionsLayer = document.getElementById('positions');
       const w = stage.clientWidth;
       const h = stage.clientHeight;
-      const pts = heartPoints(lines.length, w, h, 150);
+      const pts = heartPoints(lines.length, w, h, 40);
 
-      let side = 'right';
+      let side = 'right'; // 先从右边开始
       let counter = 0;
 
       lines.forEach((txt, i)=>{
         const el = document.createElement('div');
         el.className = 'card';
         el.textContent = txt;
-        stage.appendChild(el);
+        positionsLayer.appendChild(el);
 
-        // 初始位置
-        if (side === 'right') el.style.left = w + 100 + 'px';
-        else el.style.left = -100 + 'px';
+        // 初始位置：从右或左边飞出
+        if (side === 'right') {
+          el.style.left = w + 100 + 'px';
+        } else {
+          el.style.left = -100 + 'px';
+        }
         el.style.top = (Math.random() * h * 0.6 + h*0.2) + 'px';
         el.style.opacity = 0;
         el.style.transform = 'scale(0.7) rotate(' + (Math.random()*40-20) + 'deg)';
@@ -120,7 +124,7 @@
         }, i*200);
 
         counter++;
-        if (counter >= 3) {
+        if (counter >= 3) { // 每3个换边
           side = side === 'right' ? 'left' : 'right';
           counter = 0;
         }
@@ -131,6 +135,7 @@
   </script>
 </body>
 </html>
+
 
 
 
