@@ -3,120 +3,135 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>💖 爱心卡片动效（横屏版）</title>
+  <title>💖 爱心卡片动效（直屏版）</title>
   <style>
-    :root{ --card-w:90px; --card-h:42px; }
+    :root{ --card-w:80px; --card-h:38px; }
     html,body{
-      height:100%;width:100%;
-      margin:0;padding:0;
-      background:linear-gradient(180deg,#fffaf6,#ffeef0);
+      height:100%;margin:0;
       font-family:"Microsoft YaHei",sans-serif;
+      background:linear-gradient(180deg,#fffaf6,#ffeef0);
       overflow:hidden;
     }
-    .stage{
-      position:absolute;
-      left:0;right:0;top:0;bottom:0;
-      display:block;
+    .phone {
+      width:420px;
+      height:860px;
+      max-width:100%;
+      margin:24px auto;
+      background:linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,255,255,0.6));
+      border-radius:28px;
+      box-shadow:0 12px 40px rgba(0,0,0,0.12);
+      position:relative;
       overflow:hidden;
+      border:1px solid rgba(0,0,0,0.04);
     }
+    header{padding:12px 16px;text-align:center;}
+    header h1{font-size:16px;margin:0;font-weight:600}
+    .stage{position:absolute;left:0;right:0;top:60px;bottom:0;display:block;}
     .card{
       position:absolute;
       width:var(--card-w);
       height:var(--card-h);
-      border-radius:10px;
+      box-sizing:border-box;
+      padding:4px 6px;
+      border-radius:8px;
       background:linear-gradient(180deg,#ffffff,#fff6f8);
-      box-shadow:0 3px 10px rgba(255,107,138,0.1),0 1px 3px rgba(0,0,0,0.05);
+      box-shadow:0 3px 10px rgba(255,107,138,0.1), 0 1px 3px rgba(0,0,0,0.05);
       display:flex;align-items:center;justify-content:center;
-      text-align:center;font-weight:600;font-size:12px;color:#444;
-      transform-origin:center center;
-      opacity:0;
-      transition:all 1s ease;
+      text-align:center;font-weight:600; font-size:11px; color:#444;
+      transform-origin:center center; opacity:0;
+      transition: all 0.9s ease;
     }
   </style>
 </head>
 <body>
-  <div class="stage" id="stage"></div>
+  <div class="phone">
+    <header>
+      <h1>💖 爱心卡片动效 💖</h1>
+    </header>
+    <div class="stage" id="stage"></div>
+  </div>
 
   <script>
-    // 读取 words.txt
-    async function loadWords(){
-      try{
+    async function loadWords() {
+      try {
         const res = await fetch('words.txt');
         const text = await res.text();
-        const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
         createHeart(lines);
-      }catch(e){ console.error('无法读取 words.txt', e); }
+      } catch (err) {
+        console.error('无法读取 words.txt:', err);
+      }
     }
 
-    // 计算爱心坐标（横屏适配）
-    function heartPoints(count, w, h, padding=180){
+    // ❤️ 生成爱心坐标（直屏用）
+    function heartPoints(count, w, h, padding=160){
       const pts = [];
       const samples = Math.max(count*4, 400);
       const raw = [];
-      const scale = 0.6; // 控制爱心大小
+      const scale = 0.65; // 控制爱心整体大小
       for(let i=0;i<samples;i++){
-        const t = (i/samples)*Math.PI*2;
-        const x = 16*Math.pow(Math.sin(t),3)*scale;
-        const y = (13*Math.cos(t)-5*Math.cos(2*t)
-                  -2*Math.cos(3*t)-Math.cos(4*t))*scale;
+        const t = (i/samples) * Math.PI * 2;
+        const x = 16 * Math.pow(Math.sin(t),3) * scale;
+        const y = (13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t)) * scale;
         raw.push([x,y]);
       }
       let minx=Infinity,maxx=-Infinity,miny=Infinity,maxy=-Infinity;
-      raw.forEach(([x,y])=>{
-        if(x<minx)minx=x;if(x>maxx)maxx=x;
-        if(y<miny)miny=y;if(y>maxy)maxy=y;
-      });
+      raw.forEach(([x,y])=>{if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;});
       for(let i=0;i<count;i++){
-        const idx=Math.floor(i*raw.length/count);
-        const [x,y]=raw[idx];
-        const nx=(x-minx)/(maxx-minx);
-        const ny=(y-miny)/(maxy-miny);
-        const px=padding+nx*(w-padding*2);
-        const py=padding+(1-ny)*(h-padding*2);
+        const idx = Math.floor(i * raw.length / count);
+        const [x,y] = raw[idx];
+        const nx = (x - minx) / (maxx - minx);
+        const ny = (y - miny) / (maxy - miny);
+        const px = padding + nx * (w - padding*2);
+        const py = padding + (1-ny) * (h - padding*2);
         pts.push({x:px,y:py});
       }
       return pts;
     }
 
-    // 创建爱心动画
     function createHeart(lines){
-      const stage=document.getElementById('stage');
-      const w=stage.clientWidth;
-      const h=stage.clientHeight;
-      const pts=heartPoints(lines.length,w,h,160);
+      const stage = document.getElementById('stage');
+      const w = stage.clientWidth;
+      const h = stage.clientHeight;
+      const pts = heartPoints(lines.length, w, h, 150);
 
-      let side='right';
-      let counter=0;
+      let side = 'right';
+      let counter = 0;
 
-      lines.forEach((txt,i)=>{
-        const el=document.createElement('div');
-        el.className='card';
-        el.textContent=txt;
+      lines.forEach((txt, i)=>{
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.textContent = txt;
         stage.appendChild(el);
 
-        if(side==='right') el.style.left=w+120+'px';
-        else el.style.left=-120+'px';
-        el.style.top=(Math.random()*h*0.5+h*0.25)+'px';
-        el.style.opacity=0;
-        el.style.transform='scale(0.8) rotate('+(Math.random()*40-20)+'deg)';
+        // 初始位置
+        if (side === 'right') el.style.left = w + 100 + 'px';
+        else el.style.left = -100 + 'px';
+        el.style.top = (Math.random() * h * 0.6 + h*0.2) + 'px';
+        el.style.opacity = 0;
+        el.style.transform = 'scale(0.7) rotate(' + (Math.random()*40-20) + 'deg)';
 
-        const target=pts[i];
+        const target = pts[i];
         setTimeout(()=>{
-          el.style.left=target.x - 45 + 'px';
-          el.style.top=target.y - 21 + 'px';
-          el.style.opacity=1;
-          el.style.transform='scale(1) rotate(0deg)';
-        },i*200);
+          el.style.left = target.x - 40 + 'px';
+          el.style.top = target.y - 19 + 'px';
+          el.style.opacity = 1;
+          el.style.transform = 'scale(1) rotate(0deg)';
+        }, i*200);
 
         counter++;
-        if(counter>=3){side=side==='right'?'left':'right';counter=0;}
+        if (counter >= 3) {
+          side = side === 'right' ? 'left' : 'right';
+          counter = 0;
+        }
       });
     }
 
-    window.addEventListener('load',loadWords);
+    window.addEventListener('load', loadWords);
   </script>
 </body>
 </html>
+
 
 
 
